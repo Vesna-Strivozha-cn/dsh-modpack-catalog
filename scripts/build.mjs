@@ -133,10 +133,11 @@ async function main() {
   }
 
   // 下载量：指的是这个 .dshpack 安装文件本身被下载的次数，不是包里插件的 npm 下载量。
-  // 目录只存元数据、不搬文件，所以没有可靠计数渠道时就是 0；将来若把包托管到
-  // GitHub Release，可以在条目里写 downloads（Release 资产的 download_count）。
+  // 目录只存元数据、不搬文件；Git 仓库里的文件没有逐文件计数，所以作者不写就不输出这个字段
+  // （客户端显示「下载量暂无统计」）。将来把包托管到 GitHub Release，条目里写
+  // downloads（Release 资产的 download_count），这里会原样透传。
   for (const pack of packs) {
-    if (typeof pack.downloads !== 'number' || pack.downloads < 0) pack.downloads = 0;
+    if (typeof pack.downloads !== 'number' || pack.downloads < 0) delete pack.downloads;
   }
 
   // 水槽：把包里插件对应到插件市场的分类，跨三类以上就算「什么都有」，统一归到水槽，
