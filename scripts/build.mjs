@@ -18,6 +18,7 @@ export const CATEGORIES = [
   { id: 'dev', label: '开发调试' },
   { id: 'fun', label: '娱乐休闲' },
   { id: 'learn', label: '学习资料' },
+  { id: 'sink', label: '水槽' },
   { id: 'other', label: '其它' },
 ];
 
@@ -25,6 +26,15 @@ const ID_RE = /^[a-z0-9][a-z0-9-]{2,40}$/u;
 const FILE_RE = /^[A-Za-z0-9._-]{3,80}\.dshpack$/u;
 const SHA_RE = /^[0-9a-f]{64}$/u;
 const MAX_BYTES = 64 * 1024 * 1024;
+
+// 体量词条：按包里插件总数自动判定（0-3 轻量 / 4-8 中型 / 9-12 大型 / 13+ 大宗）
+function tierOf(count) {
+  const n = Math.max(0, Math.trunc(Number(count) || 0));
+  if (n >= 13) return 'huge';
+  if (n >= 9) return 'large';
+  if (n >= 4) return 'medium';
+  return 'small';
+}
 
 function fail(problems, where, message) {
   problems.push(where + ': ' + message);
@@ -111,6 +121,7 @@ async function main() {
       })),
       homepage: String(raw.homepage || ''),
       downloads: typeof raw.downloads === 'number' ? raw.downloads : 0,
+      pluginCount: Array.isArray(raw.plugins) ? raw.plugins.length : 0,
     });
   }
 
@@ -126,6 +137,39 @@ async function main() {
   // GitHub Release，可以在条目里写 downloads（Release 资产的 download_count）。
   for (const pack of packs) {
     if (typeof pack.downloads !== 'number' || pack.downloads < 0) pack.downloads = 0;
+  }
+
+  // 水槽：把包里插件对应到插件市场的分类，跨三类以上就算「什么都有」，统一归到水槽，
+  // 不让作者硬塞进某个单一场景。插件市场目录拿不到时跳过（不影响构建）。
+  try {
+    const res = await fetch('https://cdn.jsdelivr.net/npm/dsh-plugin-catalog/index.json', {
+      headers: { accept: 'application/json' },
+      signal: AbortSignal.timeout(20000),
+    });
+    if (res.ok) {
+      const index = await res.json();
+      const categoryByName = new Map();
+      for (const item of index.plugins || []) {
+        if (item && item.name && item.category) categoryByName.set(item.name, String(item.category));
+      }
+      for (const pack of packs) {
+        const kinds = new Set();
+        for (const plugin of pack.plugins || []) {
+          const marketCategory = categoryByName.get(plugin.name);
+          if (marketCategory) kinds.add(marketCategory);
+        }
+        if (kinds.size >= 3) {
+          pack.category = '水槽';
+          pack.categoryAuto = true;
+        }
+        pack.tier = tierOf(pack.pluginCount);
+      }
+    }
+  } catch {
+    // 拿不到目录就保留作者分类，体量照算
+  }
+  for (const pack of packs) {
+    if (!pack.tier) pack.tier = tierOf(pack.pluginCount);
   }
 
   packs.sort((a, b) => a.id.localeCompare(b.id));

@@ -1,6 +1,6 @@
 {
  "schema": 1,
- "builtAt": "2026-11-27T13:26:24.159Z",
+ "builtAt": "2026-11-27T13:41:40.998Z",
  "count": 1,
  "categories": [
   {
@@ -36,6 +36,11 @@
   {
    "id": "learn",
    "label": "学习资料",
+   "count": 0
+  },
+  {
+   "id": "sink",
+   "label": "水槽",
    "count": 0
   },
   {
@@ -79,7 +84,9 @@
     }
    ],
    "homepage": "",
-   "downloads": 0
+   "downloads": 0,
+   "pluginCount": 3,
+   "tier": "small"
   }
  ]
 }
