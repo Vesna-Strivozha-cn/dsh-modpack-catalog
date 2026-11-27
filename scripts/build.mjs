@@ -191,26 +191,21 @@ async function main() {
       return null
     }
   })();
-  const stamp = (value) => JSON.stringify({ ...value, builtAt: '' });
-  const builtAt = previous && stamp(previous) === stamp({
-    schema: 1,
-    count: packs.length,
-    categories: CATEGORIES.map((category) => ({
-      ...category,
-      count: packs.filter((pack) => pack.category === category.label).length,
-    })),
-    packs,
-  }) ? previous.builtAt : new Date().toISOString();
-  const output = {
-    schema: 1,
-    builtAt,
-    count: packs.length,
-    categories: CATEGORIES.map((category) => ({
-      ...category,
-      count: packs.filter((pack) => pack.category === category.label).length,
-    })),
-    packs,
-  };
+  // 只比较内容，不比较 builtAt 与键的顺序（{...value, builtAt: ''} 会把 builtAt 挪到末尾，
+  // 导致同样的内容永远判不相等，每天重建都会写一次新时间戳）。
+  const categories = CATEGORIES.map((category) => ({
+    ...category,
+    count: packs.filter((pack) => pack.category === category.label).length,
+  }));
+  const content = (value) => value && JSON.stringify({
+    schema: value.schema,
+    count: value.count,
+    categories: value.categories,
+    packs: value.packs,
+  });
+  const current = { schema: 1, count: packs.length, categories, packs };
+  const builtAt = previous && content(previous) === content(current) ? previous.builtAt : new Date().toISOString();
+  const output = { schema: 1, builtAt, ...current };
   fs.writeFileSync(OUT, JSON.stringify(output, null, 1) + '\n', 'utf8');
   console.log('packs.json: ' + packs.length + ' 个整合包，' + output.categories.map((c) => c.label + '=' + c.count).join(' '));
 }
