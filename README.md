@@ -54,14 +54,57 @@ dsh-modpack-kit 联网按版本取包。这样校验简单、仓库也小；完�
 
 `downloads` 不用手写：构建时会把包里各插件在 npm 的**上周下载量**加起来填进去。
 
-## 提交流程
+## 提交流程（照这个走就不会卡）
 
-1. fork 这个仓库，新建分支。
-2. 用 dsh-modpack-kit 打一个**轻量包**，把 `.dshpack` 放进 `packs/`，再写一份 `data/packs/<id>.json`
-   （`sha256` 用 `certutil -hashfile <包> SHA256` 或 `sha256sum` 算）。
-3. 本地跑 `node scripts/build.mjs`，确认输出里没有 `构建失败`。
-4. 提 PR。CI 会重新跑一遍构建；合并后当天的定时任务（或手动 dispatch）会把新条目并进 `packs.json`。
+**第 0 步：准备一个轻量包**
 
+在 dsh-modpack-kit 的「打包」页里，策略选「轻量包」，勾上要带走的插件，打包并下载成 `<名字>-<日期>-lite.dshpack`。
+轻量包只有清单与配置，十几 KB；装的人在本地联网按版本取包。
+
+**第 1 步：算 sha256 与体积**
+
+- Windows：`certutil -hashfile 名字-lite.dshpack SHA256`
+- macOS / Linux：`shasum -a 256 名字-lite.dshpack`
+- 体积：`stat -c %s`（Linux）或 `ls -l` 看字节数；不能超过 64 MB。
+
+**第 2 步：fork + 分支**
+
+```bash
+git clone https://github.com/<你>/dsh-modpack-catalog
+cd dsh-modpack-catalog
+git checkout -b add-<包id>
+```
+
+**第 3 步：放两样东西**
+
+1. 把包放进 `packs/`：文件名只许字母数字 `.` `_` `-`，例如 `packs/test-basic-2026-11-27-lite.dshpack`。
+2. 写 `data/packs/<id>.json`（格式见下一节）。
+
+**第 4 步：本地先构建一遍**
+
+```bash
+node scripts/build.mjs
+```
+
+正常会打印 `packs.json: N 个整合包，…`；出现 `构建失败` 就按提示改（最常见：sha256 或 size 对不上、分类写错、插件版本不是 x.y.z）。
+
+**第 5 步：提交并提 PR**
+
+```bash
+git add packs data/packs
+git commit -m "add: <包显示名>（<分类>）"
+git push origin add-<包id>
+```
+
+然后在 GitHub 上开 PR。CI 会重跑一遍 `scripts/build.mjs`，PR 里的 `packs.json` 不用手工改。
+
+**第 6 步：合并后等目录重建**
+
+- 定时任务：每天 `03:17 UTC`（本地 11:17）跑一轮，重建 `packs.json` 并提交。
+- 想立刻进目录：仓库 Actions 页面手动 `Run workflow`（`daily.yml` 支持 `workflow_dispatch`），一轮约十几秒到一分钟。
+- 客户端（dsh-modpack-kit）最多缓存 24 小时；等不及就在「社区资源」里点一次同步。
+
+> 想撤下自己提交的条目：开 PR 删掉 `data/packs/<id>.json` 与对应包文件即可；已合并的会在下一轮目录重建后消失。
 ## 许可与安全
 
 - 只收你自己打的包，或者你能保证有权再分发的插件组合；插件作者没写许可证的组合请先问作者。

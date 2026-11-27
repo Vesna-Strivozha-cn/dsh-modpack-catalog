@@ -1,0 +1,56 @@
+{
+ "id": "test-basic-2026-11-27",
+ "name": "测试基础包",
+ "author": "Vesna-Strivozha-cn",
+ "category": "水槽",
+ "version": "1.0.0",
+ "strategy": "lite",
+ "file": "test-basic-2026-11-27-lite.dshpack",
+ "sha256": "9a3938a932996aee1b90338710cf84e14bda93e184b8a95cb839746997e2914b",
+ "size": 12744,
+ "createdAt": "2026-11-27",
+ "updatedAt": "2026-11-27",
+ "description": {
+  "zh": "测试基础包：把十来个大插件打成一个轻量包，插件横跨界面、性能、工具、娱乐等多种用途，所以归到水槽。",
+  "en": "Test base pack: a lite bundle of a dozen popular plugins across UI, performance, tools and fun, hence filed under the sink category."
+ },
+ "plugins": [
+  {
+   "name": "@liustack/modlens",
+   "latest": true
+  },
+  {
+   "name": "billion-context",
+   "latest": true
+  },
+  {
+   "name": "cc-safety-net",
+   "latest": true
+  },
+  {
+   "name": "dsh-better-sidebar",
+   "latest": true
+  },
+  {
+   "name": "dsh-context",
+   "latest": true
+  },
+  {
+   "name": "dsh-ops",
+   "latest": true
+  },
+  {
+   "name": "dsh-whale-widget",
+   "latest": true
+  },
+  {
+   "name": "dsh-plugin-wallpaper-engine",
+   "latest": true
+  },
+  {
+   "name": "dshmarket",
+   "latest": true
+  }
+ ],
+ "homepage": ""
+}

@@ -1,6 +1,6 @@
 {
  "schema": 1,
- "builtAt": "2026-11-27T13:50:39.538Z",
+ "builtAt": "2026-11-27T14:44:52.794Z",
  "count": 1,
  "categories": [
   {
@@ -21,7 +21,7 @@
   {
    "id": "util",
    "label": "实用功能",
-   "count": 1
+   "count": 0
   },
   {
    "id": "dev",
@@ -41,7 +41,7 @@
   {
    "id": "sink",
    "label": "水槽",
-   "count": 0
+   "count": 1
   },
   {
    "id": "other",
@@ -51,41 +51,80 @@
  ],
  "packs": [
   {
-   "id": "efficient-trio",
-   "name": "效率三件套",
-   "author": "Vesna",
-   "category": "实用功能",
+   "id": "test-basic-2026-11-27",
+   "name": "测试基础包",
+   "author": "Vesna-Strivozha-cn",
+   "category": "水槽",
    "version": "1.0.0",
    "strategy": "lite",
-   "file": "efficient-trio-lite.dshpack",
-   "sha256": "822b26f2b6db948bffbc8673bb622e1a7f040555ed14e29d3ada7f456aeaf36d",
-   "size": 12522,
+   "file": "test-basic-2026-11-27-lite.dshpack",
+   "sha256": "9a3938a932996aee1b90338710cf84e14bda93e184b8a95cb839746997e2914b",
+   "size": 12744,
    "createdAt": "2026-11-27",
    "updatedAt": "2026-11-27",
    "description": {
-    "zh": "上下文管理 + 跨会话长期记忆 + 运维工具，三件配在一起用：长对话不丢线索，收尾能沉淀，排查环境有趁手的工具。",
-    "en": "Context management, long-term memory and ops tooling in one lite pack."
+    "zh": "测试基础包：把十来个大插件打成一个轻量包，插件横跨界面、性能、工具、娱乐等多种用途，所以归到水槽。",
+    "en": "Test base pack: a lite bundle of a dozen popular plugins across UI, performance, tools and fun, hence filed under the sink category."
    },
    "plugins": [
     {
-     "name": "dsh-context",
-     "version": "0.87.1",
-     "description": "把上下文管理起来，长对话不容易丢线索。"
+     "name": "@liustack/modlens",
+     "version": "",
+     "latest": true,
+     "description": ""
     },
     {
-     "name": "dsh-plugin-memory",
-     "version": "0.21.0",
-     "description": "给 DSH 一份跨会话的长期记忆，收尾时写回。"
+     "name": "billion-context",
+     "version": "",
+     "latest": true,
+     "description": ""
+    },
+    {
+     "name": "cc-safety-net",
+     "version": "",
+     "latest": true,
+     "description": ""
+    },
+    {
+     "name": "dsh-better-sidebar",
+     "version": "",
+     "latest": true,
+     "description": ""
+    },
+    {
+     "name": "dsh-context",
+     "version": "",
+     "latest": true,
+     "description": ""
     },
     {
      "name": "dsh-ops",
-     "version": "0.5.5",
-     "description": "一批系统与进程层面的操作工具，排查环境时省事。"
+     "version": "",
+     "latest": true,
+     "description": ""
+    },
+    {
+     "name": "dsh-whale-widget",
+     "version": "",
+     "latest": true,
+     "description": ""
+    },
+    {
+     "name": "dsh-plugin-wallpaper-engine",
+     "version": "",
+     "latest": true,
+     "description": ""
+    },
+    {
+     "name": "dshmarket",
+     "version": "",
+     "latest": true,
+     "description": ""
     }
    ],
    "homepage": "",
-   "pluginCount": 3,
-   "tier": "small"
+   "pluginCount": 9,
+   "tier": "large"
   }
  ]
 }

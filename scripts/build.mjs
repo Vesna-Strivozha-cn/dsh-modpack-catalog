@@ -84,8 +84,15 @@ async function main() {
     if (plugins.length === 0) fail(problems, where, 'plugins 不能为空（要列出包里装了哪些插件与版本）');
     for (const plugin of plugins) {
       if (!plugin || !String(plugin.name || '').trim()) fail(problems, where, 'plugins 里有条目缺 name');
-      if (!/^[0-9]+\.[0-9]+\.[0-9]+(?:-[0-9A-Za-z.-]+)?$/u.test(String(plugin.version || ''))) {
-        fail(problems, where, '插件 ' + (plugin && plugin.name ? plugin.name : '?') + ' 的 version 不是 x.y.z');
+      // 2026-11 起轻量包的插件可以不写死版本：{ "name": "x", "latest": true }
+      // 安装时按名字取市场最新版（插件市场认市场版）；写了 version 就必须是 x.y.z。
+      const latest = plugin && plugin.latest === true;
+      if (!latest) {
+        if (!/^[0-9]+\.[0-9]+\.[0-9]+(?:-[0-9A-Za-z.-]+)?$/u.test(String(plugin.version || ''))) {
+          fail(problems, where, '插件 ' + (plugin && plugin.name ? plugin.name : '?') + ' 的 version 不是 x.y.z（要跟市场最新就写 latest: true，不要乱填）');
+        }
+      } else if (String(plugin.version || '').trim() && !/^[0-9]+\.[0-9]+\.[0-9]+(?:-[0-9A-Za-z.-]+)?$/u.test(String(plugin.version))) {
+        fail(problems, where, '插件 ' + String(plugin.name) + ' 标了 latest 又写了非法 version');
       }
     }
 
@@ -116,7 +123,8 @@ async function main() {
       description: { zh: String(description.zh || ''), en: String(description.en || '') },
       plugins: plugins.map((plugin) => ({
         name: String(plugin.name).trim(),
-        version: String(plugin.version),
+        version: String(plugin.version || ''),
+        latest: plugin.latest === true,
         description: String(plugin.description || ''),
       })),
       homepage: String(raw.homepage || ''),
