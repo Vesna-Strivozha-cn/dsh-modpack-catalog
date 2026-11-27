@@ -1,6 +1,6 @@
 {
  "schema": 1,
- "builtAt": "2026-11-27T12:37:14.572Z",
+ "builtAt": "2026-11-27T13:26:24.159Z",
  "count": 1,
  "categories": [
   {
@@ -56,6 +56,7 @@
    "sha256": "822b26f2b6db948bffbc8673bb622e1a7f040555ed14e29d3ada7f456aeaf36d",
    "size": 12522,
    "createdAt": "2026-11-27",
+   "updatedAt": "2026-11-27",
    "description": {
     "zh": "上下文管理 + 跨会话长期记忆 + 运维工具，三件配在一起用：长对话不丢线索，收尾能沉淀，排查环境有趁手的工具。",
     "en": "Context management, long-term memory and ops tooling in one lite pack."
@@ -78,7 +79,7 @@
     }
    ],
    "homepage": "",
-   "downloads": 140049
+   "downloads": 0
   }
  ]
 }

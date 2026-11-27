@@ -30,16 +30,6 @@ function fail(problems, where, message) {
   problems.push(where + ': ' + message);
 }
 
-function npmWeekDownloads(name) {
-  return fetch(`https://api.npmjs.org/downloads/point/last-week/${encodeURIComponent(name)}`, {
-    headers: { accept: 'application/json' },
-    signal: AbortSignal.timeout(8000),
-  })
-    .then((res) => (res.ok ? res.json() : null))
-    .then((data) => (data && typeof data.downloads === 'number' ? data.downloads : 0))
-    .catch(() => 0);
-}
-
 function readJson(file) {
   return JSON.parse(fs.readFileSync(file, 'utf8'));
 }
@@ -73,6 +63,7 @@ async function main() {
     if (strategy !== 'lite') fail(problems, where, '现在只收轻量包（strategy: lite）');
     const description = raw.description && typeof raw.description === 'object' ? raw.description : {};
     if (!String(description.zh || '').trim()) fail(problems, where, '缺少 description.zh');
+    if (!String(description.en || '').trim()) fail(problems, where, '缺少 description.en（上传要双语）');
     const fileName = String(raw.file || '').trim();
     if (!FILE_RE.test(fileName)) fail(problems, where, 'file 要指向 packs/ 下的 .dshpack 文件名');
     const sha = String(raw.sha256 || '').trim().toLowerCase();
@@ -111,6 +102,7 @@ async function main() {
       sha256: sha,
       size,
       createdAt: String(raw.createdAt || ''),
+      updatedAt: String(raw.updatedAt || raw.createdAt || ''),
       description: { zh: String(description.zh || ''), en: String(description.en || '') },
       plugins: plugins.map((plugin) => ({
         name: String(plugin.name).trim(),
@@ -129,12 +121,11 @@ async function main() {
     return;
   }
 
-  // npm 下载量：把包里各插件的上周下载量加起来展示，单个查不到按 0。
-  // 这一步失败不影响构建（只是少个数字），所以全部 catch 到 0。
+  // 下载量：指的是这个 .dshpack 安装文件本身被下载的次数，不是包里插件的 npm 下载量。
+  // 目录只存元数据、不搬文件，所以没有可靠计数渠道时就是 0；将来若把包托管到
+  // GitHub Release，可以在条目里写 downloads（Release 资产的 download_count）。
   for (const pack of packs) {
-    if (pack.downloads > 0) continue;
-    const counts = await Promise.all(pack.plugins.map((plugin) => npmWeekDownloads(plugin.name)));
-    pack.downloads = counts.reduce((sum, value) => sum + value, 0);
+    if (typeof pack.downloads !== 'number' || pack.downloads < 0) pack.downloads = 0;
   }
 
   packs.sort((a, b) => a.id.localeCompare(b.id));
