@@ -120,7 +120,7 @@ async function main() {
         description: String(plugin.description || ''),
       })),
       homepage: String(raw.homepage || ''),
-      downloads: typeof raw.downloads === 'number' ? raw.downloads : 0,
+      ...(typeof raw.downloads === 'number' ? { downloads: raw.downloads } : {}),
       pluginCount: Array.isArray(raw.plugins) ? raw.plugins.length : 0,
     });
   }

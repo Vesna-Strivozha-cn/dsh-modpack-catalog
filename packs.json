@@ -1,6 +1,6 @@
 {
  "schema": 1,
- "builtAt": "2026-11-27T13:41:40.998Z",
+ "builtAt": "2026-11-27T13:50:19.207Z",
  "count": 1,
  "categories": [
   {
@@ -84,8 +84,8 @@
     }
    ],
    "homepage": "",
-   "downloads": 0,
    "pluginCount": 3,
+   "downloads": 0,
    "tier": "small"
   }
  ]
