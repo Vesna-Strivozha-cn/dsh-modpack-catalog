@@ -22,35 +22,28 @@ dsh-modpack-kit 联网按版本取包。这样校验简单、仓库也小；完�
 ```json
 {
   "id": "bili-trio",
-  "name": "B站三件套",
-  "author": "你的名字",
   "category": "实用功能",
-  "version": "1.0.0",
-  "strategy": "lite",
   "file": "bili-trio-lite.dshpack",
   "sha256": "…64 位小写十六进制…",
-  "size": 12226,
   "createdAt": "2026-11-27",
-  "description": { "zh": "一句话说明这个包解决什么问题", "en": "one line in English" },
-  "plugins": [
-    { "name": "dsh-bili-account-bridge", "version": "0.1.6", "description": "可选" }
-  ],
+  "updatedAt": "2026-11-27",
   "homepage": ""
 }
 ```
+
+条目只写「这个文件是谁、放哪、怎么核对」。**介绍、名称、作者、插件清单、打包策略一律不写在条目里**——构建时从 `.dshpack` 里的 `dsh-modpack.json` 读（也就是打包那一刻填的内容），目录直接显示它。写了 `name`/`author`/`description`/`plugins`/`strategy`/`version` 会被构建挡下。
 
 字段规则（`scripts/build.mjs` 会逐条挡）：
 
 | 字段 | 规则 |
 |---|---|
 | `id` | 3~40 位小写字母/数字/短横线，全局唯一 |
-| `name` / `author` | 非空 |
 | `category` | 必须是：工作办公 / 性能优化 / 界面美化 / 实用功能 / 开发调试 / 娱乐休闲 / 学习资料 / 水槽 / 其它；插件横跨三类以上会被自动归到「水槽」 |
-| `strategy` | 现在只能是 `lite` |
+| `description` / `name` / `author` / `plugins` / `strategy` / `version` | **不许写**：构建从包里 `dsh-modpack.json` 读取（介绍就是打包时填的那段），写了两边会不一致 |
 | `file` | `packs/` 下的 `.dshpack` 文件名；文件在仓库里时 sha256 与 size 会被当场核对 |
 | `sha256` | 64 位小写十六进制 |
 | `size` | 字节数，≤ 64 MB |
-| `plugins` | 至少一个；`name` 必填；`version` 是 `x.y.z`，或写 `"latest": true` 表示安装时取市场最新（推荐，轻量包不再写死版本） |
+| 包里的 `plugins` | 至少一个；`name` 必填；`version` 是 `x.y.z`，或写 `"latest": true` 表示安装时取市场最新（推荐） |
 
 `downloads` 不用手写、也不要把插件下载量加进来：它指的是**这个 `.dshpack` 安装文件本身**被下载的次数。文件放在 Git 仓库里没有逐文件计数，所以构建不输出该字段，客户端显示「下载量未统计」；以后把包放 GitHub Release 并在清单写 `downloads`（Release 资产的 download_count）才会透传。
 

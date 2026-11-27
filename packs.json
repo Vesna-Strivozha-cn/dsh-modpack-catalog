@@ -1,6 +1,6 @@
 {
  "schema": 1,
- "builtAt": "2026-11-27T14:50:10.179Z",
+ "builtAt": "2026-11-27T14:55:58.014Z",
  "count": 1,
  "categories": [
   {
@@ -53,7 +53,7 @@
   {
    "id": "test-basic-2026-11-27",
    "name": "测试基础包",
-   "author": "Vesna-Strivozha-cn",
+   "author": "作者？",
    "category": "水槽",
    "version": "1.0.0",
    "strategy": "lite",
@@ -63,8 +63,8 @@
    "createdAt": "2026-11-27",
    "updatedAt": "2026-11-27",
    "description": {
-    "zh": "测试基础包：把十来个大插件打成一个轻量包，插件横跨界面、性能、工具、娱乐等多种用途，所以归到水槽。",
-    "en": "Test base pack: a lite bundle of a dozen popular plugins across UI, performance, tools and fun, hence filed under the sink category."
+    "zh": "我不到啊",
+    "en": "我不到啊"
    },
    "plugins": [
     {

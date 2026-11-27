@@ -1,6 +1,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import crypto from 'node:crypto';
+import zlib from 'node:zlib';
 import { fileURLToPath } from 'node:url';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
@@ -26,6 +27,35 @@ const ID_RE = /^[a-z0-9][a-z0-9-]{2,40}$/u;
 const FILE_RE = /^[A-Za-z0-9._-]{3,80}\.dshpack$/u;
 const SHA_RE = /^[0-9a-f]{64}$/u;
 const MAX_BYTES = 64 * 1024 * 1024;
+
+// 从 .dshpack（zip）里取出 dsh-modpack.json —— 条目里不再写介绍、名称、作者、插件，
+// 一律以打包时填进包里的清单为准，免得目录和包各说一套。
+function readPackManifest(bytes) {
+  let eocd = bytes.length - 22;
+  while (eocd > 0 && bytes.readUInt32LE(eocd) !== 0x06054b50) eocd -= 1;
+  if (eocd <= 0) throw new Error('不是 zip（找不到中央目录）');
+  const count = bytes.readUInt16LE(eocd + 10);
+  let offset = bytes.readUInt32LE(eocd + 16);
+  for (let i = 0; i < count; i += 1) {
+    const nameLen = bytes.readUInt16LE(offset + 28);
+    const extraLen = bytes.readUInt16LE(offset + 30);
+    const commentLen = bytes.readUInt16LE(offset + 32);
+    const name = bytes.subarray(offset + 46, offset + 46 + nameLen).toString('utf8');
+    if (name === 'dsh-modpack.json') {
+      const localOffset = bytes.readUInt32LE(offset + 42);
+      const method = bytes.readUInt16LE(offset + 10);
+      const csize = bytes.readUInt32LE(offset + 20);
+      const localNameLen = bytes.readUInt16LE(localOffset + 26);
+      const localExtraLen = bytes.readUInt16LE(localOffset + 28);
+      const start = localOffset + 30 + localNameLen + localExtraLen;
+      const raw = bytes.subarray(start, start + csize);
+      const data = method === 8 ? zlib.inflateRawSync(raw) : raw;
+      return JSON.parse(data.toString('utf8'));
+    }
+    offset += 46 + nameLen + extraLen + commentLen;
+  }
+  throw new Error('包里没有 dsh-modpack.json');
+}
 
 // 体量词条：按包里插件总数自动判定（0-3 轻量 / 4-8 中型 / 9-12 大型 / 13+ 大宗）
 function tierOf(count) {
@@ -65,71 +95,79 @@ async function main() {
     if (!ID_RE.test(id)) fail(problems, where, 'id 要是 3~40 位小写字母数字与短横线');
     else if (seen.has(id)) fail(problems, where, 'id 重复：' + id);
     else seen.add(id);
-    if (!raw.name || !String(raw.name).trim()) fail(problems, where, '缺少 name（显示名）');
-    if (!raw.author || !String(raw.author).trim()) fail(problems, where, '缺少 author');
+    // 介绍、名称、作者、插件一律以包里的 dsh-modpack.json 为准（打包时填的），
+    // 条目里只留定位与版本核对用的字段；写了这些字段就报错，避免两套说法。
+    for (const banned of ['name', 'author', 'description', 'plugins', 'strategy', 'version']) {
+      if (raw[banned] !== undefined) {
+        fail(problems, where, '不要写 ' + banned + '：介绍与插件清单按包里 dsh-modpack.json（打包时填的）显示');
+      }
+    }
     const category = CATEGORIES.some((item) => item.label === raw.category) ? raw.category : '';
     if (!category) fail(problems, where, 'category 必须是：' + CATEGORIES.map((c) => c.label).join(' / '));
-    const strategy = String(raw.strategy || 'lite');
-    if (strategy !== 'lite') fail(problems, where, '现在只收轻量包（strategy: lite）');
-    const description = raw.description && typeof raw.description === 'object' ? raw.description : {};
-    if (!String(description.zh || '').trim()) fail(problems, where, '缺少 description.zh');
-    if (!String(description.en || '').trim()) fail(problems, where, '缺少 description.en（上传要双语）');
     const fileName = String(raw.file || '').trim();
     if (!FILE_RE.test(fileName)) fail(problems, where, 'file 要指向 packs/ 下的 .dshpack 文件名');
     const sha = String(raw.sha256 || '').trim().toLowerCase();
     if (!SHA_RE.test(sha)) fail(problems, where, '缺少合法的 sha256');
     const declaredSize = Number(raw.size) || 0;
-    if (!(declaredSize > 0) || declaredSize > MAX_BYTES) fail(problems, where, 'size 必须是 0~64MB 之间的字节数');
-    const plugins = Array.isArray(raw.plugins) ? raw.plugins : [];
-    if (plugins.length === 0) fail(problems, where, 'plugins 不能为空（要列出包里装了哪些插件与版本）');
-    for (const plugin of plugins) {
-      if (!plugin || !String(plugin.name || '').trim()) fail(problems, where, 'plugins 里有条目缺 name');
-      // 2026-11 起轻量包的插件可以不写死版本：{ "name": "x", "latest": true }
-      // 安装时按名字取市场最新版（插件市场认市场版）；写了 version 就必须是 x.y.z。
-      const latest = plugin && plugin.latest === true;
-      if (!latest) {
-        if (!/^[0-9]+\.[0-9]+\.[0-9]+(?:-[0-9A-Za-z.-]+)?$/u.test(String(plugin.version || ''))) {
-          fail(problems, where, '插件 ' + (plugin && plugin.name ? plugin.name : '?') + ' 的 version 不是 x.y.z（要跟市场最新就写 latest: true，不要乱填）');
-        }
-      } else if (String(plugin.version || '').trim() && !/^[0-9]+\.[0-9]+\.[0-9]+(?:-[0-9A-Za-z.-]+)?$/u.test(String(plugin.version))) {
-        fail(problems, where, '插件 ' + String(plugin.name) + ' 标了 latest 又写了非法 version');
-      }
-    }
+    if (declaredSize > MAX_BYTES) fail(problems, where, 'size 不能超过 64MB');
 
     // 包文件在仓库里就当场核对一遍：sha256 与大小必须和声明一致，
     // 免得目录里挂一个「指过去的文件早就被换掉了」的条目。
     const packFile = path.join(PACK_DIR, fileName);
     let size = declaredSize;
+    let manifest = null;
     if (fs.existsSync(packFile)) {
       const bytes = fs.readFileSync(packFile);
       const actual = crypto.createHash('sha256').update(bytes).digest('hex');
       size = bytes.length;
       if (actual !== sha) fail(problems, where, '包文件 sha256 与声明不一致（声明 ' + sha.slice(0, 12) + '…，实际 ' + actual.slice(0, 12) + '…）');
       if (bytes.length > MAX_BYTES) fail(problems, where, '包文件超过 64MB');
+      try {
+        manifest = readPackManifest(bytes);
+      } catch (error) {
+        fail(problems, where, '读不了包里的 dsh-modpack.json：' + String(error.message || error));
+      }
+    } else {
+      fail(problems, where, 'packs/ 下没有这个包文件（目录不搬文件，包必须跟着提交）');
+    }
+    if (manifest) {
+      const format = String(manifest.format || 'lite');
+      if (format !== 'lite') fail(problems, where, '现在只收轻量包（包里的 format 是 ' + format + '）');
+      const text = manifest.description;
+      const zhText = typeof text === 'string' ? text : String((text && text.zh) || '');
+      const enText = typeof text === 'string' ? text : String((text && text.en) || '');
+      if (!zhText.trim()) fail(problems, where, '包里的 dsh-modpack.json 没写介绍：打包时把「整合包说明」填上，目录直接显示它');
+      const pluginList = Array.isArray(manifest.plugins) ? manifest.plugins : [];
+      if (pluginList.length === 0) fail(problems, where, '包里一个插件也没有');
     }
 
+    if (!manifest) continue;
+    const rawText = manifest.description;
+    const zhText = typeof rawText === 'string' ? rawText : String((rawText && rawText.zh) || '');
+    const enText = typeof rawText === 'string' ? rawText : String((rawText && rawText.en) || '');
+    const pluginList = (Array.isArray(manifest.plugins) ? manifest.plugins : []).map((plugin) => ({
+      name: String((plugin && plugin.name) || '').trim(),
+      version: String((plugin && plugin.version) || ''),
+      latest: Boolean(plugin && plugin.latest === true),
+      description: String((plugin && plugin.description) || ''),
+    }));
     packs.push({
       id,
-      name: String(raw.name).trim(),
-      author: String(raw.author).trim(),
+      name: String(manifest.name || id).trim(),
+      author: String(manifest.author || '').trim(),
       category,
-      version: String(raw.version || '1.0.0'),
-      strategy,
+      version: String(manifest.version || '1.0.0'),
+      strategy: 'lite',
       file: fileName,
       sha256: sha,
       size,
       createdAt: String(raw.createdAt || ''),
       updatedAt: String(raw.updatedAt || raw.createdAt || ''),
-      description: { zh: String(description.zh || ''), en: String(description.en || '') },
-      plugins: plugins.map((plugin) => ({
-        name: String(plugin.name).trim(),
-        version: String(plugin.version || ''),
-        latest: plugin.latest === true,
-        description: String(plugin.description || ''),
-      })),
+      description: { zh: zhText, en: enText },
+      plugins: pluginList,
       homepage: String(raw.homepage || ''),
       ...(typeof raw.downloads === 'number' ? { downloads: raw.downloads } : {}),
-      pluginCount: Array.isArray(raw.plugins) ? raw.plugins.length : 0,
+      pluginCount: pluginList.length,
     });
   }
 
