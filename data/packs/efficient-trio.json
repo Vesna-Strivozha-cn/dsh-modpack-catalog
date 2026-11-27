@@ -1,0 +1,33 @@
+{
+ "id": "efficient-trio",
+ "name": "效率三件套",
+ "author": "Vesna",
+ "category": "实用功能",
+ "version": "1.0.0",
+ "strategy": "lite",
+ "file": "efficient-trio-lite.dshpack",
+ "sha256": "822b26f2b6db948bffbc8673bb622e1a7f040555ed14e29d3ada7f456aeaf36d",
+ "size": 12522,
+ "createdAt": "2026-11-27",
+ "description": {
+  "zh": "上下文管理 + 跨会话长期记忆 + 运维工具，三件配在一起用：长对话不丢线索，收尾能沉淀，排查环境有趁手的工具。",
+  "en": "Context management, long-term memory and ops tooling in one lite pack."
+ },
+ "plugins": [
+  {
+   "name": "dsh-context",
+   "version": "0.87.1",
+   "description": "把上下文管理起来，长对话不容易丢线索。"
+  },
+  {
+   "name": "dsh-plugin-memory",
+   "version": "0.21.0",
+   "description": "给 DSH 一份跨会话的长期记忆，收尾时写回。"
+  },
+  {
+   "name": "dsh-ops",
+   "version": "0.5.5",
+   "description": "一批系统与进程层面的操作工具，排查环境时省事。"
+  }
+ ]
+}

@@ -1,6 +1,6 @@
 {
  "schema": 1,
- "builtAt": "2026-11-27T12:25:14.872Z",
+ "builtAt": "2026-11-27T12:37:14.572Z",
  "count": 1,
  "categories": [
   {
@@ -46,39 +46,39 @@
  ],
  "packs": [
   {
-   "id": "bili-trio",
-   "name": "B站三件套",
-   "author": "Vesna-Strivozha-cn",
+   "id": "efficient-trio",
+   "name": "效率三件套",
+   "author": "Vesna",
    "category": "实用功能",
    "version": "1.0.0",
    "strategy": "lite",
-   "file": "bili-trio-lite.dshpack",
-   "sha256": "e2a1f8637309692d5bed1e556f316951c88ee1ac0491427abd100c2218a09a46",
-   "size": 12226,
+   "file": "efficient-trio-lite.dshpack",
+   "sha256": "822b26f2b6db948bffbc8673bb622e1a7f040555ed14e29d3ada7f456aeaf36d",
+   "size": 12522,
    "createdAt": "2026-11-27",
    "description": {
-    "zh": "B站相关三个插件打包：账号桥、鲸鱼、大飞鱼生活。只记安装码，体积最小，安装时需要联网从市场取包。",
-    "en": "Three Bilibili-related plugins in one pack: account bridge, whale, and dafeiyu life. Download-code only, smallest size; installing needs network."
+    "zh": "上下文管理 + 跨会话长期记忆 + 运维工具，三件配在一起用：长对话不丢线索，收尾能沉淀，排查环境有趁手的工具。",
+    "en": "Context management, long-term memory and ops tooling in one lite pack."
    },
    "plugins": [
     {
-     "name": "dsh-bili-account-bridge",
-     "version": "0.1.6",
-     "description": ""
+     "name": "dsh-context",
+     "version": "0.87.1",
+     "description": "把上下文管理起来，长对话不容易丢线索。"
     },
     {
-     "name": "dsh-bili-whale",
-     "version": "0.4.6",
-     "description": ""
+     "name": "dsh-plugin-memory",
+     "version": "0.21.0",
+     "description": "给 DSH 一份跨会话的长期记忆，收尾时写回。"
     },
     {
-     "name": "dsh-dafeiyu-life",
-     "version": "2.8.0",
-     "description": ""
+     "name": "dsh-ops",
+     "version": "0.5.5",
+     "description": "一批系统与进程层面的操作工具，排查环境时省事。"
     }
    ],
    "homepage": "",
-   "downloads": 2391
+   "downloads": 140049
   }
  ]
 }
