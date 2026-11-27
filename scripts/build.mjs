@@ -182,9 +182,28 @@ async function main() {
   }
 
   packs.sort((a, b) => a.id.localeCompare(b.id));
+  // 内容没变就别刷 builtAt：否则每天一次的重建都会产生一个只有时间戳的提交，
+  // 和本地提交互相顶牛（之前就因为这个 rebase 出过两次冲突）。
+  const previous = (() => {
+    try {
+      return JSON.parse(fs.readFileSync(OUT, 'utf8'))
+    } catch {
+      return null
+    }
+  })();
+  const stamp = (value) => JSON.stringify({ ...value, builtAt: '' });
+  const builtAt = previous && stamp(previous) === stamp({
+    schema: 1,
+    count: packs.length,
+    categories: CATEGORIES.map((category) => ({
+      ...category,
+      count: packs.filter((pack) => pack.category === category.label).length,
+    })),
+    packs,
+  }) ? previous.builtAt : new Date().toISOString();
   const output = {
     schema: 1,
-    builtAt: new Date().toISOString(),
+    builtAt,
     count: packs.length,
     categories: CATEGORIES.map((category) => ({
       ...category,
